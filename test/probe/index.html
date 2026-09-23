@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>Geolocation Probe</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 14px/1.6 system-ui, "Microsoft YaHei", sans-serif; max-width: 820px; margin: 32px auto; padding: 0 16px; }
+  h1 { font-size: 19px; margin: 0 0 4px; }
+  p.sub { color: #777; margin: 0 0 20px; }
+  section { border: 1px solid #8884; border-radius: 10px; padding: 12px 16px; margin: 0 0 14px; }
+  h2 { font-size: 14px; margin: 0 0 8px; }
+  table { border-collapse: collapse; width: 100%; }
+  td { padding: 3px 8px 3px 0; vertical-align: top; }
+  td:first-child { color: #777; width: 170px; }
+  code, .mono { font-family: ui-monospace, Consolas, monospace; }
+  .ok { color: #1a7f37; font-weight: 600; }
+  .bad { color: #c0362c; font-weight: 600; }
+  #log { max-height: 180px; overflow: auto; font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+  button { font: inherit; padding: 5px 12px; border-radius: 6px; border: 1px solid #8886; background: transparent; color: inherit; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>Geolocation Probe</h1>
+<p class="sub">只调用 navigator.geolocation，没有任何第三方定位逻辑。</p>
+
+<section>
+  <h2>getCurrentPosition</h2>
+  <table id="pos"><tr><td>状态</td><td>请求中…</td></tr></table>
+  <p><button id="again">再取一次</button></p>
+</section>
+
+<section>
+  <h2>watchPosition（实时，改坐标后这里应立刻变）</h2>
+  <div id="log">等待第一次回调…</div>
+</section>
+
+<section>
+  <h2>一致性检查</h2>
+  <table id="checks"><tr><td>检测中…</td><td></td></tr></table>
+</section>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const row = (k, v, cls) => `<tr><td>${k}</td><td class="${cls || 'mono'}">${v}</td></tr>`;
+let last = null;
+
+function showPos(p) {
+  last = p;
+  const c = p.coords;
+  $('pos').innerHTML =
+    row('纬度', c.latitude) + row('经度', c.longitude) +
+    row('精度', c.accuracy + ' 米') +
+    row('海拔', c.altitude === null ? 'null' : c.altitude) +
+    row('时间戳', new Date(p.timestamp).toLocaleString()) +
+    row('对象类型', (p instanceof GeolocationPosition ? 'GeolocationPosition' : '不是原生类型 ← 可被检测') ,
+        p instanceof GeolocationPosition ? 'ok' : 'bad') +
+    row('地图', `<a href="https://www.openstreetmap.org/?mlat=${c.latitude}&mlon=${c.longitude}#map=16/${c.latitude}/${c.longitude}" target="_blank">在 OSM 上查看</a>`, '');
+  checks();
+}
+
+function showErr(e) {
+  $('pos').innerHTML = row('错误', `${e.code} — ${e.message}`, 'bad');
+}
+
+const get = () => navigator.geolocation.getCurrentPosition(showPos, showErr, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+get();
+$('again').onclick = get;
+
+navigator.geolocation.watchPosition((p) => {
+  const line = document.createElement('div');
+  line.textContent = `${new Date().toLocaleTimeString()}  ${p.coords.latitude}, ${p.coords.longitude}  ±${p.coords.accuracy}m`;
+  if ($('log').textContent.startsWith('等待')) $('log').textContent = '';
+  $('log').prepend(line);
+}, (e) => { $('log').textContent = `watch 错误: ${e.code} ${e.message}`; });
+
+// Cross-check what else the page can see about where you are
+async function checks() {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  let out = row('函数签名', navigator.geolocation.getCurrentPosition.toString(),
+    navigator.geolocation.getCurrentPosition.toString().includes('[native code]') ? 'mono' : 'bad');
+  out += row('系统时区', tz);
+  try {
+    const st = await navigator.permissions.query({ name: 'geolocation' });
+    out += row('定位权限', st.state);
+  } catch {}
+  $('checks').innerHTML = out;
+  try {
+    const ip = await (await fetch('https://ipinfo.io/json')).json();
+    const [ilat, ilng] = ip.loc.split(',').map(Number);
+    let extra = row('IP 地址', ip.ip) + row('IP 定位', `${ip.city}, ${ip.region} (${ip.loc})`);
+    if (last) {
+      const d = Math.hypot(last.coords.latitude - ilat, (last.coords.longitude - ilng) * Math.cos(ilat * Math.PI / 180)) * 111.32;
+      extra += row('与 GPS 坐标相距', `${d.toFixed(0)} km`, d > 100 ? 'bad' : 'mono');
+    }
+    $('checks').innerHTML += extra;
+  } catch {}
+}
+</script>
+</body>
+</html>
