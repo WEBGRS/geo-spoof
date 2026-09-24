@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <link rel="stylesheet" href="lib/leaflet.css">
@@ -9,33 +9,33 @@
   <header>
     <strong>Geo Spoof</strong>
     <label class="switch"><input type="checkbox" id="enabled"><span></span></label>
-    <span id="state">关闭</span>
+    <span id="state" data-i18n="stateOff">Off</span>
   </header>
 
   <p id="err" hidden></p>
 
   <form id="searchForm">
-    <input id="q" placeholder="搜地名 / 粘贴 “纬度, 经度” / Google Maps 链接">
-    <button>搜索</button>
+    <input id="q" data-i18n-placeholder="searchPlaceholder">
+    <button data-i18n="search">Search</button>
   </form>
   <ul id="results"></ul>
 
   <div id="map"></div>
 
   <div class="grid">
-    <label>纬度<input id="lat" type="number" step="any"></label>
-    <label>经度<input id="lng" type="number" step="any"></label>
-    <label>精度 (米)<input id="accuracy" type="number" min="1" value="20"></label>
-    <label>海拔 (米)<input id="altitude" type="number" step="any" placeholder="留空"></label>
+    <label><span data-i18n="lat">Latitude</span><input id="lat" type="number" step="any"></label>
+    <label><span data-i18n="lng">Longitude</span><input id="lng" type="number" step="any"></label>
+    <label><span data-i18n="accuracy">Accuracy (m)</span><input id="accuracy" type="number" min="1" value="20"></label>
+    <label><span data-i18n="altitude">Altitude (m)</span><input id="altitude" type="number" step="any" data-i18n-placeholder="altitudePlaceholder"></label>
   </div>
-  <label class="check"><input type="checkbox" id="jitter"> 每次返回加微小随机偏移（更像真实 GPS）</label>
+  <label class="check"><input type="checkbox" id="jitter"> <span data-i18n="jitter">Random jitter on each fix</span></label>
 
   <div class="row">
-    <button id="save" class="primary">应用</button>
-    <button id="fav">收藏当前点</button>
+    <button id="save" class="primary" data-i18n="apply">Apply</button>
+    <button id="fav" data-i18n="saveFav">Save as favorite</button>
   </div>
   <ul id="favs"></ul>
-  <p class="hint">改完后刷新目标网页生效；已打开的 watchPosition 会实时切换。</p>
+  <p class="hint" data-i18n="hint"></p>
 
   <script src="lib/leaflet.js"></script>
   <script src="popup.js"></script>

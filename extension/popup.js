@@ -1,4 +1,10 @@
 const $ = (id) => document.getElementById(id);
+const t = (k) => chrome.i18n.getMessage(k) || k;
+
+// Localize static text
+document.documentElement.lang = chrome.i18n.getUILanguage();
+document.querySelectorAll('[data-i18n]').forEach((el) => (el.textContent = t(el.dataset.i18n)));
+document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => (el.placeholder = t(el.dataset.i18nPlaceholder)));
 const DEFAULT = { enabled: false, lat: 43.0747, lng: -89.3842, accuracy: 20, altitude: '', jitter: true };
 
 let cfg, favs, marker, map = null;
@@ -26,7 +32,7 @@ try {
   }).addTo(map);
   map.on('click', (e) => { setPoint(e.latlng.lat, e.latlng.lng); save(); });
 } catch (e) {
-  showErr('地图加载失败，坐标仍可手动输入: ' + e.message);
+  showErr(t('mapFailed') + ' ' + e.message);
   $('map').style.display = 'none';
 }
 
@@ -54,11 +60,11 @@ function readForm() {
 async function save() {
   cfg = readForm();
   if (!isFinite(cfg.lat) || !isFinite(cfg.lng) || Math.abs(cfg.lat) > 90 || Math.abs(cfg.lng) > 180) {
-    $('state').textContent = '坐标无效'; return;
+    $('state').textContent = t('stateInvalid'); return;
   }
   await chrome.storage.local.set({ cfg });
-  const base = cfg.enabled ? '已伪装' : '关闭';
-  $('state').textContent = '已保存';
+  const base = t(cfg.enabled ? 'stateOn' : 'stateOff');
+  $('state').textContent = t('stateSaved');
   clearTimeout(save.t);
   save.t = setTimeout(() => ($('state').textContent = base), 900);
 }
@@ -77,10 +83,10 @@ async function search(e) {
   if (!q) return;
   const c = parseCoords(q);
   if (c) return setPoint(c[0], c[1], 16);
-  const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=6&accept-language=zh-CN,en&q=' + encodeURIComponent(q);
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=6&accept-language=' + chrome.i18n.getUILanguage() + ',en&q=' + encodeURIComponent(q);
   try {
     const list = await (await fetch(url)).json();
-    if (!list.length) $('results').innerHTML = '<li><span>没找到</span></li>';
+    if (!list.length) $('results').innerHTML = `<li><span>${t('noResults')}</span></li>`;
     for (const r of list) {
       const li = document.createElement('li');
       li.innerHTML = '<span></span>';
@@ -88,14 +94,14 @@ async function search(e) {
       li.onclick = () => { setPoint(r.lat, r.lon, 16); $('results').innerHTML = ''; };
       $('results').append(li);
     }
-  } catch { $('results').innerHTML = '<li><span>搜索失败（网络）</span></li>'; }
+  } catch { $('results').innerHTML = `<li><span>${t('searchFailed')}</span></li>`; }
 }
 
 function renderFavs() {
   $('favs').innerHTML = '';
   favs.forEach((f, i) => {
     const li = document.createElement('li');
-    li.innerHTML = '<span></span><b title="删除">✕</b>';
+    li.innerHTML = `<span></span><b title="${t('remove')}">✕</b>`;
     li.firstChild.textContent = `${f.name}  (${f.lat}, ${f.lng})`;
     li.firstChild.onclick = () => setPoint(f.lat, f.lng, 16);
     li.lastChild.onclick = async () => { favs.splice(i, 1); await chrome.storage.local.set({ favs }); renderFavs(); };
@@ -106,21 +112,21 @@ function renderFavs() {
 async function addFav() {
   // Name from search box, fallback to label
   const q = $('q').value.trim();
-  const name = q && !parseCoords(q) ? q.split(',')[0].slice(0, 30) : `收藏 ${favs.length + 1}`;
+  const name = q && !parseCoords(q) ? q.split(',')[0].slice(0, 30) : `${t('favorite')} ${favs.length + 1}`;
   favs.unshift({ name, lat: +$('lat').value, lng: +$('lng').value });
   await chrome.storage.local.set({ favs });
   renderFavs();
 }
 
 (async () => {
-  const s = await chrome.storage.local.get(['cfg', 'favs']).catch((e) => { showErr('读取设置失败: ' + e.message); return {}; });
+  const s = await chrome.storage.local.get(['cfg', 'favs']).catch((e) => { showErr(t('loadFailed') + ' ' + e.message); return {}; });
   cfg = { ...DEFAULT, ...s.cfg };
   favs = s.favs || [];
   $('enabled').checked = cfg.enabled;
   $('accuracy').value = cfg.accuracy;
   $('altitude').value = cfg.altitude;
   $('jitter').checked = cfg.jitter;
-  $('state').textContent = cfg.enabled ? '已伪装' : '关闭';
+  $('state').textContent = t(cfg.enabled ? 'stateOn' : 'stateOff');
   setPoint(cfg.lat, cfg.lng, 15);
   renderFavs();
 })();

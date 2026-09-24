@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "Geo Spoof",
   "version": "1.0.0",
-  "description": "Override the location websites see through the Geolocation API.",
+  "default_locale": "en",
+  "description": "__MSG_extDescription__",
   "permissions": [
     "storage"
   ],

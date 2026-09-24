@@ -32,8 +32,8 @@ srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(http.s
 threading.Thread(target=srv.serve_forever, daemon=True).start()
 
 with sync_playwright() as p:
-    ctx = p.chromium.launch_persistent_context(str(tmp / "profile"), headless=True, channel="chromium",
-        device_scale_factor=2, args=[f"--disable-extensions-except={ext}", f"--load-extension={ext}"])
+    ctx = p.chromium.launch_persistent_context(str(tmp / "profile"), headless=True, channel="chromium", locale="en-US",
+        device_scale_factor=2, args=["--lang=en-US", f"--disable-extensions-except={ext}", f"--load-extension={ext}"])
     sw = ctx.service_workers[0] if ctx.service_workers else ctx.wait_for_event("serviceworker")
     ext_id = sw.url.split("/")[2]
     sw.evaluate(f"chrome.storage.local.set({{cfg:{{enabled:true,lat:{LAT},lng:{LNG},accuracy:{ACC},altitude:'',jitter:false}},"
@@ -53,4 +53,21 @@ with sync_playwright() as p:
     page.wait_for_function("window.done", timeout=20000)
     page.screenshot(path=str(OUT / "demo-page.png"))
     ctx.close()
+
+    # Chinese UI popup
+    ctx = p.chromium.launch_persistent_context(str(tmp / "profile-zh"), headless=True, channel="chromium", locale="zh-CN",
+        device_scale_factor=2, args=["--lang=zh-CN", f"--disable-extensions-except={ext}", f"--load-extension={ext}"])
+    sw = ctx.service_workers[0] if ctx.service_workers else ctx.wait_for_event("serviceworker")
+    sw.evaluate(f"chrome.storage.local.set({{cfg:{{enabled:true,lat:{LAT},lng:{LNG},accuracy:{ACC},altitude:'',jitter:false}}}})")
+    pop = ctx.new_page()
+    pop.set_viewport_size({"width": 380, "height": 200})
+    pop.goto(f"chrome-extension://{sw.url.split('/')[2]}/popup.html")
+    pop.wait_for_timeout(3000)
+    pop.screenshot(path=str(OUT / "popup-zh.png"), full_page=True)
+    ctx.close()
+
+# Shrink PNGs
+from PIL import Image
+for f in OUT.glob("*.png"):
+    Image.open(f).convert("RGB").quantize(256, method=2).save(f, optimize=True)
 print("saved to", OUT)

@@ -11,7 +11,7 @@ Pick any spot on a map, and websites that ask your browser for your location get
   <img src="docs/demo-page.png" width="520" alt="A web page calling navigator.geolocation gets the Eiffel Tower coordinates">
 </p>
 
-*Left: the popup (its UI is in Chinese). Right: an ordinary page calling `navigator.geolocation.getCurrentPosition()` gets the spoofed point.*
+*Left: the popup. Right: an ordinary page calling `navigator.geolocation.getCurrentPosition()` gets the spoofed point.*
 
 ## Features
 
@@ -20,6 +20,7 @@ Pick any spot on a map, and websites that ask your browser for your location get
 - **Favorites** for points you use often.
 - **Live switching.** Active `watchPosition` callbacks move to the new point immediately.
 - **Toolbar badge** reads `ON` while spoofing.
+- **English and Chinese UI.** It follows the browser language (`_locales/en`, `_locales/zh_CN`); English is the default. <details><summary>Chinese UI</summary><img src="docs/popup-zh.png" width="280" alt="Popup in Chinese"></details>
 - **Pass-through when off.** When spoofing is off, calls go straight to the real API.
 
 ## Install

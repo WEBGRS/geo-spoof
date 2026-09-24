@@ -5,7 +5,7 @@ async function paint() {
   await chrome.action.setBadgeText({ text: on ? 'ON' : '' });
   await chrome.action.setBadgeBackgroundColor({ color: '#1db954' });
   await chrome.action.setTitle({
-    title: on ? `Geo Spoof: ${cfg.lat}, ${cfg.lng}` : 'Geo Spoof: 关闭',
+    title: on ? `Geo Spoof: ${cfg.lat}, ${cfg.lng}` : `Geo Spoof: ${chrome.i18n.getMessage('stateOff')}`,
   });
 }
 
