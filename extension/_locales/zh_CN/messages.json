@@ -16,7 +16,7 @@
   "saveFav": { "message": "收藏当前点" },
   "favorite": { "message": "收藏" },
   "remove": { "message": "删除" },
-  "hint": { "message": "改完后刷新目标网页生效；已打开的 watchPosition 会实时切换。" },
+  "hint": { "message": "改完后刷新网页生效。" },
   "mapFailed": { "message": "地图加载失败，坐标仍可手动输入:" },
   "noResults": { "message": "没找到" },
   "searchFailed": { "message": "搜索失败（网络）" },

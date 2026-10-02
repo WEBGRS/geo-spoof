@@ -16,7 +16,7 @@
   "saveFav": { "message": "Save as favorite" },
   "favorite": { "message": "Favorite" },
   "remove": { "message": "Remove" },
-  "hint": { "message": "Reload the target page after changes. Open watchPosition calls switch live." },
+  "hint": { "message": "Reload the page after changes." },
   "mapFailed": { "message": "Map failed to load; you can still type coordinates:" },
   "noResults": { "message": "No results" },
   "searchFailed": { "message": "Search failed (network)" },
